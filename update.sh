@@ -69,10 +69,14 @@ main() {
     # Faz backup do arquivo atual com timestamp
     info_msg "Fazendo backup do arquivo atual..."
     backup_file=$(create_backup)
-    
+
+    # Remove o arquivo antigo antes de baixar o novo
+    info_msg "Removendo a versão antiga..."
+    rm -f "$HOME/.hydroedit.py"
+
     # Baixa a nova versão
     info_msg "Baixando a nova versão..."
-       if wget https://raw.githubusercontent.com/Henriquehnnm/HydroEdit/main/hydroedit.py -O "$HOME/.hydroedit.py"; then
+    if wget https://raw.githubusercontent.com/Henriquehnnm/HydroEdit/main/hydroedit.py -O "$HOME/.hydroedit.py"; then
         chmod +x "$HOME/.hydroedit.py"
         success_msg "HydroEdit atualizado com sucesso!"
         info_msg "Um backup do arquivo anterior foi salvo em: $backup_file"
