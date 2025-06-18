@@ -7,7 +7,6 @@ Repositório: https://github.com/Henriquehnnm/HydroEdit
 Nome do Projeto: HydroEdit
 Descrição: Editor de texto simples para terminal com realce de sintaxe, busca, substituição, seleção, desfazer/refazer, e suporte a múltiplas linguagens.
 Licença: GPLv3
-o HydroEdit é um subprojeto do projeto Hydro
 """
 import curses
 import os
