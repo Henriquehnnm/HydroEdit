@@ -17,7 +17,13 @@
 ### Método Rápido (Recomendado)
 Execute o seguinte comando no terminal:
 ```bash
-wget -qO- https://raw.githubusercontent.com/Henriquehnnm/HydroEdit/main/install.sh | bash
+wget -qO- --no-cache https://raw.githubusercontent.com/Henriquehnnm/HydroEdit/main/install.sh | bash
+```
+
+### Atualização
+Para atualizar o HydroEdit para a versão mais recente, execute:
+```bash
+wget -qO- --no-cache https://raw.githubusercontent.com/Henriquehnnm/HydroEdit/main/update.sh | bash
 ```
 
 ### Instalação Manual
