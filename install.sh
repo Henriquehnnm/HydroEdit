@@ -162,8 +162,8 @@ main() {
     install_dependencies $os_type
     
     # Copia o editor para a home
-    progress_msg "Copiando o editor para $HOME/.hydroedit.py"
-    cp hydroedit.py "$HOME/.hydroedit.py"
+    progress_msg "Baixando o editor para $HOME/.hydroedit.py"
+    wget -q https://raw.githubusercontent.com/Henriquehnnm/HydroEdit/main/hydroedit.py -O "$HOME/.hydroedit.py"
     chmod +x "$HOME/.hydroedit.py"
     
     # Detecta o shell atual
