@@ -1,4 +1,13 @@
 #!/usr/bin/env python3
+"""
+HydroEdit - Editor de Texto em Terminal
+
+Autor: Henrique Sardinha
+Repositório: https://github.com/Henriquehnnm/HydroEdit
+Nome do Projeto: HydroEdit
+Descrição: Editor de texto simples para terminal com realce de sintaxe, busca, substituição, seleção, desfazer/refazer, e suporte a múltiplas linguagens.
+Licença: GPLv3
+"""
 import curses
 import os
 import sys
