@@ -37,8 +37,11 @@ info_msg() {
 
 # Função para criar backup com timestamp
 create_backup() {
-    local timestamp=$(date +"%Y%m%d_%H%M%S")
-    local backup_file="$HOME/.hydroedit.py.bak.$timestamp"
+    local timestamp
+    local backup_file
+    
+    timestamp=$(date +"%Y%m%d_%H%M%S")
+    backup_file="$HOME/.hydroedit.py.bak.$timestamp"
     cp "$HOME/.hydroedit.py" "$backup_file"
     echo "$backup_file"
 }
