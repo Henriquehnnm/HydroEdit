@@ -382,15 +382,15 @@ MIN_WIDTH, MIN_HEIGHT = 80, 24
 MAX_UNDO = 100
 
 # Símbolos Nerd Font
-ICON_SAVE = "󰆓"  # Salvar
-ICON_ERROR = "󰅚"  # Erro
-ICON_HELP = "󰋗"  # Ajuda
-ICON_EXIT = "󰅚"  # Sair
-ICON_SEARCH = "󰍉"  # Buscar
-ICON_CUT = "󰆐"  # Cortar
-ICON_PASTE = "󰆏"  # Colar
-ICON_UNDO = "󰑊"  # Desfazer
-ICON_REDO = "󰑋"  # Refazer
+ICON_SAVE = "󰆓 "  # Salvar
+ICON_ERROR = "󰅚 "  # Erro
+ICON_HELP = "󰋗 "  # Ajuda
+ICON_EXIT = "󰅚 "  # Sair
+ICON_SEARCH = "󰍉 "  # Buscar
+ICON_CUT = "󰆐 "  # Cortar
+ICON_PASTE = "󰆏 "  # Colar
+ICON_UNDO = "󰑊 "  # Desfazer
+ICON_REDO = "󰑋 "  # Refazer
 
 # Cores para realce de sintaxe
 COLOR_KEYWORD = 6
