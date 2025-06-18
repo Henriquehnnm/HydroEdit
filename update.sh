@@ -57,15 +57,15 @@ main() {
     fi
     
     # Verifica se o arquivo existe
-    if [ ! -f "$HOME/.hydroedit.py" ]; then
+    if [ ! -f ~/.hydroedit.py ]; then
         error_msg "HydroEdit não está instalado. Por favor, execute o script de instalação primeiro."
         exit 1
     fi
 
     # Remove a versão antiga, se existir
-    if [ -f "$HOME/.hydroedit.py" ]; then
+    if [ -f ~/.hydroedit.py ]; then
         info_msg "Removendo a versão antiga..."
-        if rm -f "$HOME/.hydroedit.py"; then
+        if rm -f ~/.hydroedit.py; then
             success_msg "Versão antiga removida com sucesso."
         else
             error_msg "Não foi possível remover a versão antiga. Verifique permissões."
@@ -75,8 +75,8 @@ main() {
     
     # Baixa a nova versão diretamente no arquivo ~/.hydroedit.py
     info_msg "Baixando a nova versão..."
-    if wget https://raw.githubusercontent.com/Henriquehnnm/HydroEdit/main/hydroedit.py -O "$HOME/.hydroedit.py"; then
-        chmod +x "$HOME/.hydroedit.py"
+    if wget https://raw.githubusercontent.com/Henriquehnnm/HydroEdit/main/hydroedit.py -O ~/.hydroedit.py; then
+        chmod +x ~/.hydroedit.py
         success_msg "HydroEdit atualizado com sucesso!"
     else
         error_msg "Falha ao baixar a nova versão. Nenhuma alteração foi feita."
