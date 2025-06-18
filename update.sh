@@ -62,18 +62,13 @@ main() {
         exit 1
     fi
     
-    # Baixa a nova versão para um arquivo temporário
+    # Baixa a nova versão diretamente no arquivo ~/.hydroedit.py
     info_msg "Baixando a nova versão..."
-    temp_file=$(mktemp)
-    if wget https://raw.githubusercontent.com/Henriquehnnm/HydroEdit/main/hydroedit.py -O "$temp_file"; then
-        info_msg "Removendo a versão antiga..."
-        rm -f "$HOME/.hydroedit.py"
-        mv "$temp_file" "$HOME/.hydroedit.py"
+    if wget https://raw.githubusercontent.com/Henriquehnnm/HydroEdit/main/hydroedit.py -O "$HOME/.hydroedit.py"; then
         chmod +x "$HOME/.hydroedit.py"
         success_msg "HydroEdit atualizado com sucesso!"
     else
         error_msg "Falha ao baixar a nova versão. Nenhuma alteração foi feita."
-        rm -f "$temp_file"
         exit 1
     fi
 }
