@@ -1,29 +1,25 @@
 <p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=8BE9FD&height=200&section=header&text=HydroFetch&fontSize=40&fontColor=F8F8F2" />
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=8BE9FD&height=200&section=header&text=HydroEdit&fontSize=40&fontColor=F8F8F2" />
 </p>
 
-**Hydrofetch** é uma alternativa **minimalista e eficiente** ao antigo Neofetch. Ele exibe informações essenciais do sistema de forma **clean** e **estilosa**.
+**HydroEdit** é um editor de texto simples e moderno para terminal, com realce de sintaxe, busca, substituição, seleção, desfazer/refazer e suporte a múltiplas linguagens.
 
 ## Características
 
--  **Design minimalista**: Sem excesso de informações, só o essencial!
--  **Rápido e leve**: Executa instantaneamente, sem consumo desnecessário.
--  **Estiloso**: Exibe informações do sistema com um toque neon!
--  **Alternativa moderna ao Neofetch**: Simples, funcional e bonito.
--  **Expansível**: Suporte para mais distros chegando nas próximas versões.
+- **Realce de sintaxe** para diversas linguagens (Python, Bash, C, Markdown, etc.)
+- **Busca e substituição** avançadas
+- **Desfazer/Refazer** ilimitados
+- **Seleção de texto** e operações de corte/colagem
+- **Formatação automática** para Python e JavaScript
+- **Interface intuitiva** e responsiva para terminal
+- **Compatível com Nerd Fonts** para ícones e visual moderno
 
 ## Instalação
 
 ### Método Rápido (Recomendado)
-Execute o seguinte comando no terminal:
+Execute o comando abaixo no terminal:
 ```bash
 wget -qO- --no-cache https://raw.githubusercontent.com/Henriquehnnm/HydroEdit/main/install.sh | bash
-```
-
-### Atualização
-Para atualizar o HydroEdit para a versão mais recente, execute:
-```bash
-wget -qO- --no-cache https://raw.githubusercontent.com/Henriquehnnm/HydroEdit/main/update.sh | bash
 ```
 
 ### Instalação Manual
@@ -32,16 +28,22 @@ wget -qO- --no-cache https://raw.githubusercontent.com/Henriquehnnm/HydroEdit/ma
 git clone https://github.com/Henriquehnnm/HydroEdit.git
 cd HydroEdit
 ```
-
 2. Execute o script de instalação:
 ```bash
 chmod +x install.sh
 ./install.sh
 ```
 
+### Atualização
+Para atualizar o HydroEdit para a versão mais recente:
+```bash
+wget -qO- --no-cache https://raw.githubusercontent.com/Henriquehnnm/HydroEdit/main/update.sh | bash
+```
+
 ### Requisitos
+- Python 3.7+
 - Uma Nerd Font instalada para melhor experiência visual
-- Bash ou Zsh ou Fish como shell
+- Bash, Zsh ou Fish como shell
 - Sistema operacional tipo Unix
 
 ## Preview
