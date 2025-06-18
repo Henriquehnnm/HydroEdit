@@ -61,7 +61,7 @@ main() {
     if [ ! -f "$HOME/.hydroedit.py" ]; then
         error_msg "HydroEdit não está instalado. Por favor, execute o script de instalação primeiro."
         exit 1
-    }
+    fi
     
     # Faz backup do arquivo atual com timestamp
     info_msg "Fazendo backup do arquivo atual..."

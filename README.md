@@ -33,18 +33,6 @@ chmod +x install.sh
 ./install.sh
 ```
 
-### Atualização
-Para atualizar o HydroEdit para a versão mais recente, você pode usar o script de atualização:
-
-```bash
-wget -qO- https://raw.githubusercontent.com/Henriquehnnm/HydroEdit/main/update.sh | bash
-```
-
-O script de atualização:
-- Faz backup automático da versão atual com timestamp
-- Mantém os 5 backups mais recentes
-- Restaura automaticamente o backup em caso de falha na atualização
-
 ### Requisitos
 - Uma Nerd Font instalada para melhor experiência visual
 - Bash ou Zsh ou Fish como shell
