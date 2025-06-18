@@ -61,6 +61,17 @@ main() {
         error_msg "HydroEdit não está instalado. Por favor, execute o script de instalação primeiro."
         exit 1
     fi
+
+    # Remove a versão antiga, se existir
+    if [ -f "$HOME/.hydroedit.py" ]; then
+        info_msg "Removendo a versão antiga..."
+        if rm -f "$HOME/.hydroedit.py"; then
+            success_msg "Versão antiga removida com sucesso."
+        else
+            error_msg "Não foi possível remover a versão antiga. Verifique permissões."
+            exit 1
+        fi
+    fi
     
     # Baixa a nova versão diretamente no arquivo ~/.hydroedit.py
     info_msg "Baixando a nova versão..."
