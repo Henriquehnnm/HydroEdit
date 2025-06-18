@@ -37,22 +37,12 @@ info_msg() {
 
 # Função para criar backup com timestamp
 create_backup() {
-    local timestamp
-    local backup_file
-    
-    timestamp=$(date +"%Y%m%d_%H%M%S")
-    backup_file="$HOME/.hydroedit.py.bak.$timestamp"
-    cp "$HOME/.hydroedit.py" "$backup_file"
-    echo "$backup_file"
+    :
 }
 
 # Função para limpar backups antigos (mantém apenas os 5 mais recentes)
 cleanup_old_backups() {
-    local backup_dir="$HOME"
-    local backup_pattern=".hydroedit.py.bak.*"
-    
-    # Lista todos os backups, ordena por data (mais recentes primeiro) e remove os mais antigos
-    ls -t "$backup_dir"/$backup_pattern 2>/dev/null | tail -n +6 | xargs -r rm
+    :
 }
 
 # Função principal
@@ -72,27 +62,18 @@ main() {
         exit 1
     fi
     
-    # Faz backup do arquivo atual com timestamp
-    info_msg "Fazendo backup do arquivo atual..."
-    backup_file=$(create_backup)
-
     # Baixa a nova versão para um arquivo temporário
     info_msg "Baixando a nova versão..."
     temp_file=$(mktemp)
     if wget https://raw.githubusercontent.com/Henriquehnnm/HydroEdit/main/hydroedit.py -O "$temp_file"; then
-        # Remove o arquivo antigo somente após download bem-sucedido
         info_msg "Removendo a versão antiga..."
         rm -f "$HOME/.hydroedit.py"
         mv "$temp_file" "$HOME/.hydroedit.py"
         chmod +x "$HOME/.hydroedit.py"
         success_msg "HydroEdit atualizado com sucesso!"
-        info_msg "Um backup do arquivo anterior foi salvo em: $backup_file"
-        # Limpa backups antigos
-        cleanup_old_backups
     else
-        error_msg "Falha ao baixar a nova versão. Restaurando backup..."
+        error_msg "Falha ao baixar a nova versão. Nenhuma alteração foi feita."
         rm -f "$temp_file"
-        mv "$backup_file" "$HOME/.hydroedit.py"
         exit 1
     fi
 }
