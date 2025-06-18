@@ -405,6 +405,43 @@ COLOR_CSS_VALUE = 14
 COLOR_PREPROCESSOR = 15
 COLOR_VARIABLE = 16
 COLOR_SYMBOL = 17
+COLOR_XML_TAG = 18
+COLOR_XML_ATTRIBUTE = 19
+COLOR_XML_ENTITY = 20
+COLOR_XML_CDATA = 21
+COLOR_XML_DOCTYPE = 22
+COLOR_XML_PROCESSING = 23
+COLOR_TOML_TABLE = 24
+COLOR_TOML_KEY = 25
+COLOR_TOML_BOOLEAN = 26
+COLOR_TOML_DATE = 27
+COLOR_TOML_ARRAY = 28
+COLOR_YAML_KEY = 29
+COLOR_YAML_ANCHOR = 30
+COLOR_YAML_ALIAS = 31
+COLOR_YAML_TAG = 32
+COLOR_YAML_DIRECTIVE = 33
+COLOR_YAML_LIST = 34
+COLOR_YAML_DOCUMENT = 35
+COLOR_JSON_KEY = 36
+COLOR_JSON_BOOLEAN = 37
+COLOR_JSON_OPERATOR = 38
+
+# Cores para Markdown
+COLOR_MD_HEADER = 39
+COLOR_MD_BOLD = 40
+COLOR_MD_ITALIC = 41
+COLOR_MD_CODE = 42
+COLOR_MD_LINK = 43
+COLOR_MD_IMAGE = 44
+COLOR_MD_LIST = 45
+COLOR_MD_QUOTE = 46
+COLOR_MD_RULE = 47
+COLOR_MD_TABLE = 48
+COLOR_MD_STRIKE = 49
+COLOR_MD_HIGHLIGHT = 50
+COLOR_MD_FOOTNOTE = 51
+COLOR_MD_TASK = 52
 
 # Padrões de sintaxe por linguagem
 SYNTAX_PATTERNS = {
@@ -415,6 +452,25 @@ SYNTAX_PATTERNS = {
         'functions': r'\b([a-zA-Z_]\w*)\s*\(',
         'numbers': r'\b\d+(\.\d+)?\b',
         'operators': r'[+\-*/=<>!&|^~]+'
+    },
+    'json': {
+        'strings': r'(\".*?\")',
+        'numbers': r'\b\d+(\.\d+)?(e[+-]?\d+)?\b',
+        'booleans': r'\b(true|false|null)\b',
+        'keys': r'(\"[a-zA-Z0-9_-]+\")(?=\s*:)',
+        'operators': r'[{}\[\]\:,]',
+        'whitespace': r'\s+'
+    },
+    'toml': {
+        'comments': r'(#.*?)$',
+        'strings': r'(\'.*?\'|\".*?\"|""".*?""")',
+        'numbers': r'\b\d+(\.\d+)?(e[+-]?\d+)?\b',
+        'booleans': r'\b(true|false)\b',
+        'dates': r'\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})?)?',
+        'tables': r'^\[.*?\]',
+        'arrays': r'\[.*?\]',
+        'keys': r'^[a-zA-Z0-9_-]+(?=\s*=)',
+        'operators': r'[=]'
     },
     'javascript': {
         'keywords': r'\b(function|var|let|const|if|else|while|for|in|of|try|catch|finally|return|break|continue|switch|case|default|class|extends|new|this|super|import|export|async|await|true|false|null|undefined)\b',
@@ -521,6 +577,50 @@ SYNTAX_PATTERNS = {
         'functions': r'\b([a-zA-Z_]\w*)\s*\(',
         'numbers': r'\b\d+(\.\d+)?(L|F|D)?\b',
         'operators': r'[+\-*/=<>!&|^~]+'
+    },
+    'xml': {
+        'tags': r'(<[^>]+>)',
+        'strings': r'(\'.*?\'|\".*?\")',
+        'comments': r'(<!--.*?-->)',
+        'attributes': r'(\w+)=',
+        'operators': r'[+\-*/=<>!&|^~]+',
+        'entities': r'&[a-zA-Z]+;',
+        'cdata': r'<!\[CDATA\[.*?\]\]>',
+        'doctype': r'<!DOCTYPE.*?>',
+        'processing': r'<\?.*?\?>'
+    },
+    'yaml': {
+        'comments': r'(#.*?)$',
+        'strings': r'(\'.*?\'|\".*?\"|>.*?$|\|.*?$)',
+        'numbers': r'\b\d+(\.\d+)?(e[+-]?\d+)?\b',
+        'booleans': r'\b(true|false|yes|no|on|off)\b',
+        'dates': r'\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})?)?',
+        'keys': r'^[a-zA-Z0-9_-]+(?=\s*:)',
+        'anchors': r'&[a-zA-Z0-9_-]+',
+        'aliases': r'\*[a-zA-Z0-9_-]+',
+        'tags': r'![a-zA-Z0-9_-]+',
+        'directives': r'^%[A-Z]+',
+        'operators': r'[=:]',
+        'lists': r'^\s*-\s',
+        'documents': r'^---$|^\.\.\.$'
+    },
+    'markdown': {
+        'headers': r'^(#{1,6})\s+(.+)$',
+        'bold': r'\*\*(.+?)\*\*',
+        'italic': r'\*(.+?)\*',
+        'code_blocks': r'```[\s\S]*?```',
+        'inline_code': r'`[^`]+`',
+        'links': r'\[([^\]]+)\]\(([^)]+)\)',
+        'images': r'!\[([^\]]*)\]\(([^)]+)\)',
+        'lists': r'^(\s*)[*+-]\s+(.+)$',
+        'numbered_lists': r'^(\s*)\d+\.\s+(.+)$',
+        'blockquotes': r'^>\s+(.+)$',
+        'horizontal_rules': r'^[-*_]{3,}$',
+        'tables': r'^\|.+\|$',
+        'strikethrough': r'~~(.+?)~~',
+        'highlight': r'==(.+?)==',
+        'footnotes': r'\[\^([^\]]+)\]',
+        'task_lists': r'^(\s*)[*+-]\s+\[([ xX])\]\s+(.+)$'
     }
 }
 
@@ -560,13 +660,45 @@ def highlight_syntax(line, language):
                     'comments': COLOR_COMMENT,
                     'functions': COLOR_FUNCTION,
                     'numbers': COLOR_NUMBER,
-                    'operators': COLOR_OPERATOR,
-                    'tags': COLOR_HTML_TAG,
+                    'operators': COLOR_OPERATOR if language != 'json' else COLOR_JSON_OPERATOR,
+                    'tags': COLOR_HTML_TAG if language != 'xml' else COLOR_XML_TAG,
                     'properties': COLOR_CSS_PROP,
                     'values': COLOR_CSS_VALUE,
                     'preprocessor': COLOR_PREPROCESSOR,
                     'variables': COLOR_VARIABLE,
-                    'symbols': COLOR_SYMBOL
+                    'symbols': COLOR_SYMBOL,
+                    'attributes': COLOR_XML_ATTRIBUTE,
+                    'entities': COLOR_XML_ENTITY,
+                    'cdata': COLOR_XML_CDATA,
+                    'doctype': COLOR_XML_DOCTYPE,
+                    'processing': COLOR_XML_PROCESSING,
+                    'tables': COLOR_TOML_TABLE,
+                    'keys': COLOR_TOML_KEY if language == 'toml' else (COLOR_YAML_KEY if language == 'yaml' else COLOR_JSON_KEY),
+                    'booleans': COLOR_TOML_BOOLEAN if language != 'json' else COLOR_JSON_BOOLEAN,
+                    'dates': COLOR_TOML_DATE,
+                    'arrays': COLOR_TOML_ARRAY,
+                    'anchors': COLOR_YAML_ANCHOR,
+                    'aliases': COLOR_YAML_ALIAS,
+                    'tags': COLOR_YAML_TAG if language == 'yaml' else COLOR_HTML_TAG,
+                    'directives': COLOR_YAML_DIRECTIVE,
+                    'lists': COLOR_YAML_LIST,
+                    'documents': COLOR_YAML_DOCUMENT,
+                    'headers': COLOR_MD_HEADER,
+                    'bold': COLOR_MD_BOLD,
+                    'italic': COLOR_MD_ITALIC,
+                    'code_blocks': COLOR_MD_CODE,
+                    'inline_code': COLOR_MD_CODE,
+                    'links': COLOR_MD_LINK,
+                    'images': COLOR_MD_IMAGE,
+                    'lists': COLOR_MD_LIST,
+                    'numbered_lists': COLOR_MD_LIST,
+                    'blockquotes': COLOR_MD_QUOTE,
+                    'horizontal_rules': COLOR_MD_RULE,
+                    'tables': COLOR_MD_TABLE,
+                    'strikethrough': COLOR_MD_STRIKE,
+                    'highlight': COLOR_MD_HIGHLIGHT,
+                    'footnotes': COLOR_MD_FOOTNOTE,
+                    'task_lists': COLOR_MD_TASK
                 }.get(pattern_type, 0)
                 highlights.append((color, line[start:end]))
                 last_end = end
@@ -822,7 +954,10 @@ def get_language_from_file(filepath):
         '.rb': 'ruby',
         '.swift': 'swift',
         '.kt': 'kotlin',
-        '.kts': 'kotlin'
+        '.kts': 'kotlin',
+        '.toml': 'toml',
+        '.yml': 'yaml',
+        '.yaml': 'yaml'
     }
     return lang_map.get(ext)
 
@@ -1130,12 +1265,49 @@ def main(stdscr, initial_filepath=None):
     curses.init_pair(COLOR_PREPROCESSOR, curses.COLOR_YELLOW, -1)
     curses.init_pair(COLOR_VARIABLE, curses.COLOR_MAGENTA, -1)
     curses.init_pair(COLOR_SYMBOL, curses.COLOR_CYAN, -1)
+    curses.init_pair(COLOR_XML_TAG, curses.COLOR_RED, -1)
+    curses.init_pair(COLOR_XML_ATTRIBUTE, curses.COLOR_BLUE, -1)
+    curses.init_pair(COLOR_XML_ENTITY, curses.COLOR_GREEN, -1)
+    curses.init_pair(COLOR_XML_CDATA, curses.COLOR_CYAN, -1)
+    curses.init_pair(COLOR_XML_DOCTYPE, curses.COLOR_YELLOW, -1)
+    curses.init_pair(COLOR_XML_PROCESSING, curses.COLOR_MAGENTA, -1)
+    curses.init_pair(COLOR_TOML_TABLE, curses.COLOR_GREEN, -1)
+    curses.init_pair(COLOR_TOML_KEY, curses.COLOR_BLUE, -1)
+    curses.init_pair(COLOR_TOML_BOOLEAN, curses.COLOR_YELLOW, -1)
+    curses.init_pair(COLOR_TOML_DATE, curses.COLOR_MAGENTA, -1)
+    curses.init_pair(COLOR_TOML_ARRAY, curses.COLOR_CYAN, -1)
+    curses.init_pair(COLOR_YAML_KEY, curses.COLOR_GREEN, -1)
+    curses.init_pair(COLOR_YAML_ANCHOR, curses.COLOR_BLUE, -1)
+    curses.init_pair(COLOR_YAML_ALIAS, curses.COLOR_YELLOW, -1)
+    curses.init_pair(COLOR_YAML_TAG, curses.COLOR_RED, -1)
+    curses.init_pair(COLOR_YAML_DIRECTIVE, curses.COLOR_CYAN, -1)
+    curses.init_pair(COLOR_YAML_LIST, curses.COLOR_GREEN, -1)
+    curses.init_pair(COLOR_YAML_DOCUMENT, curses.COLOR_BLUE, -1)
+    curses.init_pair(COLOR_JSON_KEY, curses.COLOR_GREEN, -1)
+    curses.init_pair(COLOR_JSON_BOOLEAN, curses.COLOR_YELLOW, -1)
+    curses.init_pair(COLOR_JSON_OPERATOR, curses.COLOR_CYAN, -1)
     # Cores existentes
     curses.init_pair(1, curses.COLOR_GREEN, -1)
     curses.init_pair(2, curses.COLOR_RED, -1)
     curses.init_pair(3, curses.COLOR_CYAN, -1)
     curses.init_pair(4, curses.COLOR_YELLOW, -1)
     curses.init_pair(5, curses.COLOR_WHITE, curses.COLOR_BLUE)
+    
+    # Cores para Markdown
+    curses.init_pair(COLOR_MD_HEADER, curses.COLOR_BLUE, -1)
+    curses.init_pair(COLOR_MD_BOLD, curses.COLOR_YELLOW, -1)
+    curses.init_pair(COLOR_MD_ITALIC, curses.COLOR_CYAN, -1)
+    curses.init_pair(COLOR_MD_CODE, curses.COLOR_GREEN, -1)
+    curses.init_pair(COLOR_MD_LINK, curses.COLOR_MAGENTA, -1)
+    curses.init_pair(COLOR_MD_IMAGE, curses.COLOR_MAGENTA, -1)
+    curses.init_pair(COLOR_MD_LIST, curses.COLOR_WHITE, -1)
+    curses.init_pair(COLOR_MD_QUOTE, curses.COLOR_CYAN, -1)
+    curses.init_pair(COLOR_MD_RULE, curses.COLOR_WHITE, -1)
+    curses.init_pair(COLOR_MD_TABLE, curses.COLOR_WHITE, -1)
+    curses.init_pair(COLOR_MD_STRIKE, curses.COLOR_RED, -1)
+    curses.init_pair(COLOR_MD_HIGHLIGHT, curses.COLOR_YELLOW, -1)
+    curses.init_pair(COLOR_MD_FOOTNOTE, curses.COLOR_CYAN, -1)
+    curses.init_pair(COLOR_MD_TASK, curses.COLOR_GREEN, -1)
 
     if initial_filepath:
         if not os.path.isabs(initial_filepath):
