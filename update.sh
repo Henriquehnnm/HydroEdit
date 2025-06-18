@@ -60,6 +60,12 @@ main() {
     show_banner
     info_msg "Iniciando atualização do HydroEdit..."
     
+    # Verifica se o wget está instalado
+    if ! command -v wget >/dev/null 2>&1; then
+        error_msg "O comando 'wget' não está instalado. Instale-o para continuar."
+        exit 1
+    fi
+    
     # Verifica se o arquivo existe
     if [ ! -f "$HOME/.hydroedit.py" ]; then
         error_msg "HydroEdit não está instalado. Por favor, execute o script de instalação primeiro."
@@ -70,21 +76,22 @@ main() {
     info_msg "Fazendo backup do arquivo atual..."
     backup_file=$(create_backup)
 
-    # Remove o arquivo antigo antes de baixar o novo
-    info_msg "Removendo a versão antiga..."
-    rm -f "$HOME/.hydroedit.py"
-
-    # Baixa a nova versão
+    # Baixa a nova versão para um arquivo temporário
     info_msg "Baixando a nova versão..."
-    if wget https://raw.githubusercontent.com/Henriquehnnm/HydroEdit/main/hydroedit.py -O "$HOME/.hydroedit.py"; then
+    temp_file=$(mktemp)
+    if wget https://raw.githubusercontent.com/Henriquehnnm/HydroEdit/main/hydroedit.py -O "$temp_file"; then
+        # Remove o arquivo antigo somente após download bem-sucedido
+        info_msg "Removendo a versão antiga..."
+        rm -f "$HOME/.hydroedit.py"
+        mv "$temp_file" "$HOME/.hydroedit.py"
         chmod +x "$HOME/.hydroedit.py"
         success_msg "HydroEdit atualizado com sucesso!"
         info_msg "Um backup do arquivo anterior foi salvo em: $backup_file"
-        
         # Limpa backups antigos
         cleanup_old_backups
     else
         error_msg "Falha ao baixar a nova versão. Restaurando backup..."
+        rm -f "$temp_file"
         mv "$backup_file" "$HOME/.hydroedit.py"
         exit 1
     fi
