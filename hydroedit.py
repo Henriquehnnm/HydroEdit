@@ -1664,3 +1664,5 @@ if __name__ == "__main__":
         curses.wrapper(main, sys.argv[1])
     else:
         curses.wrapper(main)
+
+# Thanks!
