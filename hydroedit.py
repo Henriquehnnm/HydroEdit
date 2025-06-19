@@ -120,7 +120,7 @@ class SearchState:
 
 class Command(ABC):
     """Classe base abstrata para comandos do editor."""
-    
+
     @abstractmethod
     def execute(self, state: EditorState) -> None:
         """Executa o comando."""
@@ -133,7 +133,7 @@ class Command(ABC):
 
 class MoveCommand(Command):
     """Comando para mover o cursor."""
-    
+
     def __init__(self, direction: str, amount: int = 1):
         self.direction = direction
         self.amount = amount
@@ -143,7 +143,7 @@ class MoveCommand(Command):
     def execute(self, state: EditorState) -> None:
         self.old_y = state.cursor_y
         self.old_x = state.cursor_x
-        
+
         if self.direction == "up":
             state.cursor_y = max(0, state.cursor_y - self.amount)
         elif self.direction == "down":
@@ -152,9 +152,9 @@ class MoveCommand(Command):
             state.cursor_x = max(0, state.cursor_x - self.amount)
         elif self.direction == "right":
             state.cursor_x = min(len(state.content[state.cursor_y]), state.cursor_x + self.amount)
-        
+
         state.cursor_x = min(state.cursor_x, len(state.content[state.cursor_y]))
-        
+
         if state.shift_pressed:
             state.update_selection()
         else:
@@ -166,7 +166,7 @@ class MoveCommand(Command):
 
 class InsertCommand(Command):
     """Comando para inserir texto."""
-    
+
     def __init__(self, char: str):
         self.char = char
         self.old_y = 0
@@ -175,7 +175,7 @@ class InsertCommand(Command):
     def execute(self, state: EditorState) -> None:
         self.old_y = state.cursor_y
         self.old_x = state.cursor_x
-        
+
         if state.insert_mode:
             state.content[state.cursor_y] = (
                 state.content[state.cursor_y][:state.cursor_x] +
@@ -194,7 +194,7 @@ class InsertCommand(Command):
                     state.content[state.cursor_y][:state.cursor_x] +
                     self.char
                 )
-        
+
         state.cursor_x += 1
         state.is_modified = True
         state.clear_selection()
@@ -207,9 +207,56 @@ class InsertCommand(Command):
         state.cursor_y = self.old_y
         state.cursor_x = self.old_x
 
+class InsertTextCommand(Command):
+    """Comando para inserir um bloco de texto."""
+
+    def __init__(self, text: str):
+        self.text = text
+        self.old_y = 0
+        self.old_x = 0
+
+    def execute(self, state: EditorState) -> None:
+        self.old_y = state.cursor_y
+        self.old_x = state.cursor_x
+        lines = self.text.split('\n')
+        current_line = state.content[state.cursor_y]
+
+        if len(lines) == 1:
+            state.content[state.cursor_y] = current_line[:state.cursor_x] + self.text + current_line[state.cursor_x:]
+            state.cursor_x += len(self.text)
+        else:
+            first_part = current_line[:state.cursor_x]
+            second_part = current_line[state.cursor_x:]
+            state.content[state.cursor_y] = first_part + lines[0]
+            state.content[state.cursor_y+1:state.cursor_y+1] = lines[1:]
+            state.cursor_y += len(lines) - 1
+            state.cursor_x = len(lines[-1])
+            state.content[state.cursor_y] += second_part
+        state.is_modified = True
+
+    def undo(self, state: EditorState) -> None:
+        state.cursor_y = self.old_y
+        state.cursor_x = self.old_x
+        lines = self.text.split('\n')
+        current_line = state.content[state.cursor_y]
+
+        if len(lines) == 1:
+            state.content[state.cursor_y] = current_line[:self.old_x] + current_line[self.old_x + len(self.text):]
+        else:
+            end_y = self.old_y + len(lines) - 1
+            end_line_len = len(lines[-1])
+            original_second_part_len = len(state.content[end_y]) - end_line_len
+
+            first_part = current_line[:self.old_x]
+            second_part = state.content[end_y][end_line_len:]
+            state.content[self.old_y] = first_part + second_part
+            del state.content[self.old_y + 1 : end_y + 1]
+
+        state.is_modified = True
+
 class BackspaceCommand(Command):
     """Comando para apagar o caractere anterior."""
-    
+
     def __init__(self):
         self.old_y = 0
         self.old_x = 0
@@ -218,7 +265,7 @@ class BackspaceCommand(Command):
     def execute(self, state: EditorState) -> None:
         self.old_y = state.cursor_y
         self.old_x = state.cursor_x
-        
+
         if state.cursor_x > 0:
             self.deleted_char = state.content[state.cursor_y][state.cursor_x-1]
             state.content[state.cursor_y] = (
@@ -232,7 +279,7 @@ class BackspaceCommand(Command):
             state.content[state.cursor_y-1] += state.content[state.cursor_y]
             del state.content[state.cursor_y]
             state.cursor_y -= 1
-        
+
         state.is_modified = True
         state.clear_selection()
 
@@ -255,7 +302,7 @@ class BackspaceCommand(Command):
 
 class DeleteCommand(Command):
     """Comando para apagar o caractere atual."""
-    
+
     def __init__(self):
         self.old_y = 0
         self.old_x = 0
@@ -264,7 +311,7 @@ class DeleteCommand(Command):
     def execute(self, state: EditorState) -> None:
         self.old_y = state.cursor_y
         self.old_x = state.cursor_x
-        
+
         if state.cursor_x < len(state.content[state.cursor_y]):
             self.deleted_char = state.content[state.cursor_y][state.cursor_x]
             state.content[state.cursor_y] = (
@@ -275,7 +322,7 @@ class DeleteCommand(Command):
             self.deleted_char = "\n"
             state.content[state.cursor_y] += state.content[state.cursor_y+1]
             del state.content[state.cursor_y+1]
-        
+
         state.is_modified = True
         state.clear_selection()
 
@@ -297,7 +344,7 @@ class DeleteCommand(Command):
 
 class EnterCommand(Command):
     """Comando para inserir uma nova linha."""
-    
+
     def __init__(self):
         self.old_y = 0
         self.old_x = 0
@@ -305,16 +352,16 @@ class EnterCommand(Command):
     def execute(self, state: EditorState) -> None:
         self.old_y = state.cursor_y
         self.old_x = state.cursor_x
-        
+
         # Preserva a indentação da linha atual
         indent = len(state.content[state.cursor_y]) - len(state.content[state.cursor_y].lstrip())
         indent_str = ' ' * indent
-        
+
         # Insere a nova linha
         new_line = indent_str + state.content[state.cursor_y][state.cursor_x:]
         state.content[state.cursor_y] = state.content[state.cursor_y][:state.cursor_x]
         state.content.insert(state.cursor_y + 1, new_line)
-        
+
         state.cursor_y += 1
         state.cursor_x = indent
         state.is_modified = True
@@ -328,7 +375,7 @@ class EnterCommand(Command):
 
 class ReplaceCommand(Command):
     """Comando para substituir texto."""
-    
+
     def __init__(self, pattern: str, replacement: str, case_sensitive: bool = True):
         self.pattern = pattern
         self.replacement = replacement
@@ -345,7 +392,7 @@ class ReplaceCommand(Command):
 
 class FormatCommand(Command):
     """Comando para formatar o código."""
-    
+
     def __init__(self):
         self.old_content = []
 
@@ -359,7 +406,7 @@ class FormatCommand(Command):
 
 class CommandHandler:
     """Classe para gerenciar comandos do editor."""
-    
+
     def __init__(self):
         self.undo_stack = deque(maxlen=MAX_UNDO)
         self.redo_stack = deque(maxlen=MAX_UNDO)
@@ -504,7 +551,7 @@ SYNTAX_PATTERNS = {
         'numbers': r'\b\d+(\.\d+)?(px|em|rem|%|vh|vw)?\b'
     },
     'java': {
-        'keywords': r'\b(public|private|protected|class|interface|extends|implements|static|final|void|int|long|float|double|boolean|char|String|if|else|while|for|do|switch|case|break|continue|return|try|catch|finally|throw|throws|new|this|super|import|package)\b',
+        'keywords': r'\b(public|private|protected|class|interface|extends|implements|static|final|void|int|long|float|double|boolean|char|String|if|else|switch|case|default|for|while|do|break|continue|return|goto|sizeof)\b',
         'strings': r'(\'.*?\'|\".*?\")',
         'comments': r'(//.*?$|/\*.*?\*/)',
         'functions': r'\b([a-zA-Z_]\w*)\s*\(',
@@ -580,7 +627,7 @@ SYNTAX_PATTERNS = {
         'operators': r'[+\-*/=<>!&|^~]+'
     },
     'kotlin': {
-        'keywords': r'\b(as|break|class|continue|do|else|false|for|fun|if|in|interface|is|null|object|package|return|super|this|throw|true|try|typealias|typeof|val|var|when|while|by|catch|constructor|delegate|dynamic|field|file|finally|get|import|init|param|property|receiver|set|setparam|where|actual|abstract|annotation|companion|const|crossinline|data|enum|expect|external|final|infix|inline|inner|internal|lateinit|noinline|open|operator|out|override|private|protected|public|reified|sealed|suspend|tailrec|vararg)\b',
+        'keywords': r'\b(as|break|class|continue|do|else|false|for|fun|if|in|interface|is|null|object|package|return|super|this|throw|true|try|typealias|val|var|when|while|by|catch|constructor|delegate|dynamic|field|file|finally|get|import|init|param|property|receiver|set|setparam|where|actual|abstract|annotation|companion|const|crossinline|data|enum|expect|external|final|infix|inline|inner|internal|lateinit|noinline|open|operator|out|override|private|protected|public|reified|sealed|suspend|tailrec|vararg)\b',
         'strings': r'(\'.*?\'|\".*?\"|""".*?""")',
         'comments': r'(//.*?$|/\*.*?\*/)',
         'functions': r'\b([a-zA-Z_]\w*)\s*\(',
@@ -651,11 +698,11 @@ def highlight_syntax(line, language):
     """Versão otimizada do realce de sintaxe com cache de regex."""
     if not language or language not in SYNTAX_PATTERNS_COMPILED:
         return [(0, line)]
-    
+
     patterns = SYNTAX_PATTERNS_COMPILED[language]
     highlights = []
     last_end = 0
-    
+
     # Processa cada tipo de padrão
     for pattern_type, pattern in patterns.items():
         for match in pattern.finditer(line):
@@ -711,10 +758,10 @@ def highlight_syntax(line, language):
                 }.get(pattern_type, 0)
                 highlights.append((color, line[start:end]))
                 last_end = end
-    
+
     if last_end < len(line):
         highlights.append((0, line[last_end:]))
-    
+
     return highlights
 
 def draw_box(stdscr, y, x, h, w, title=""):
@@ -767,15 +814,15 @@ def show_help(stdscr):
     h, w = stdscr.getmaxyx()
     help_h = 28  # Aumentei a altura para acomodar todos os comandos
     help_w = 60  # Largura da caixa de ajuda
-    
+
     # Calcula a posição para centralizar na caixa de texto principal
     box_h, box_w = h - 4, w - 4  # Dimensões da caixa principal
     help_y = (box_h - help_h) // 2 + 1  # +1 para considerar o offset da caixa principal
     help_x = (box_w - help_w) // 2 + 2  # +2 para considerar o offset da caixa principal
-    
+
     # Desenha a caixa de ajuda
     draw_box(stdscr, help_y, help_x, help_h, help_w, "Ajuda")
-    
+
     # Lista de comandos e suas descrições
     commands = [
         ("Navegação:", ""),
@@ -807,7 +854,7 @@ def show_help(stdscr):
         ("", ""),
         ("", "")
     ]
-    
+
     # Desenha os comandos
     for i, (cmd, desc) in enumerate(commands):
         y = help_y + 1 + i
@@ -816,7 +863,7 @@ def show_help(stdscr):
             safe_addstr(stdscr, y, help_x + 2, cmd, curses.color_pair(3))
             # Desenha a descrição
             safe_addstr(stdscr, y, help_x + 15, desc, curses.color_pair(3))
-    
+
     stdscr.refresh()
     stdscr.getch()
 
@@ -838,7 +885,7 @@ def search_text(content, pattern, start_y=0, start_x=0, case_sensitive=True, who
     """Busca texto no conteúdo e retorna todas as ocorrências."""
     if not pattern:
         return []
-    
+
     try:
         if regex:
             if not case_sensitive:
@@ -848,9 +895,9 @@ def search_text(content, pattern, start_y=0, start_x=0, case_sensitive=True, who
         elif not case_sensitive:
             pattern = pattern.lower()
             content = [line.lower() for line in content]
-        
+
         matches = []
-        
+
         # Define o intervalo de busca
         if search_in_selection and selection_start and selection_end:
             start_line = min(selection_start[0], selection_end[0])
@@ -858,11 +905,11 @@ def search_text(content, pattern, start_y=0, start_x=0, case_sensitive=True, who
         else:
             start_line = 0
             end_line = len(content)
-        
+
         # Busca todas as ocorrências
         for y in range(start_line, end_line):
             line = content[y]
-            
+
             if regex:
                 for match in pattern.finditer(line):
                     start, end = match.span()
@@ -878,16 +925,16 @@ def search_text(content, pattern, start_y=0, start_x=0, case_sensitive=True, who
                     x = line.find(pattern, x)
                     if x == -1:
                         break
-                    
+
                     if whole_word:
                         if (x == 0 or not line[x-1].isalnum()) and \
                            (x + len(pattern) == len(line) or not line[x + len(pattern)].isalnum()):
                             matches.append((y, x))
                     else:
                         matches.append((y, x))
-                    
+
                     x += 1
-        
+
         return matches
     except re.error:
         return []
@@ -896,7 +943,7 @@ def replace_text(content, pattern, replacement, case_sensitive=True):
     if not case_sensitive:
         pattern = pattern.lower()
         content = [line.lower() for line in content]
-    
+
     return [line.replace(pattern, replacement) for line in content]
 
 def has_unsaved_changes(content, filepath):
@@ -912,14 +959,14 @@ def confirm_exit(stdscr, content, filepath):
     msg = "Há alterações não salvas. O que deseja fazer?"
     y = h//2
     x = (w - len(msg))//2
-    
+
     draw_box(stdscr, y-1, x-2, 5, len(msg)+4, "Confirmar Saída")
     stdscr.addstr(y, x, msg, curses.color_pair(3))
     stdscr.addstr(y+1, x, "S - Salvar e sair", curses.color_pair(3))
     stdscr.addstr(y+2, x, "N - Sair sem salvar", curses.color_pair(3))
     stdscr.addstr(y+3, x, "ESC - Cancelar", curses.color_pair(3))
     stdscr.refresh()
-    
+
     while True:
         key = stdscr.getch()
         if key in (ord('s'), ord('S')):  # S
@@ -1011,11 +1058,11 @@ def show_message(stdscr, message, timeout=2):
     msg_w = len(message) + 4
     msg_x = (w - msg_w) // 2
     msg_y = h - 4
-    
+
     draw_box(stdscr, msg_y-1, msg_x-2, 3, msg_w, "Mensagem")
     stdscr.addstr(msg_y, msg_x, message, curses.color_pair(3))
     stdscr.refresh()
-    
+
     start_time = time.time()
     while time.time() - start_time < timeout:
         if stdscr.getch() != -1:
@@ -1031,29 +1078,29 @@ def wrap_line(line, width):
     cache_key = (line, width)
     if cache_key in WRAP_CACHE:
         return WRAP_CACHE[cache_key]
-    
+
     if len(line) <= width:
         result = [line]
     else:
         # Preserva a indentação original
         indent = len(line) - len(line.lstrip())
         indent_str = ' ' * indent
-        
+
         # Se a linha contém apenas espaços, retorna ela como está
         if not line.strip():
             result = [line]
         else:
             # Remove a indentação para processar o texto
             text = line[indent:]
-            
+
             # Caracteres que podem ser usados para quebrar palavras
             break_chars = set(' -_.,;:!?/\\()[]{}<>|')
-            
+
             # Função para quebrar uma palavra longa
             def break_long_word(word, max_width):
                 if len(word) <= max_width:
                     return [word]
-                
+
                 parts = []
                 current = ''
                 for char in word:
@@ -1065,7 +1112,7 @@ def wrap_line(line, width):
                 if current:
                     parts.append(current)
                 return parts
-            
+
             # Processa o texto
             words = text.split()
             if not words:
@@ -1075,7 +1122,7 @@ def wrap_line(line, width):
                 current_line = []
                 current_length = 0
                 max_content_width = width - indent
-                
+
                 for word in words:
                     # Se a palavra é maior que a largura disponível
                     if len(word) > max_content_width:
@@ -1084,12 +1131,12 @@ def wrap_line(line, width):
                             wrapped.append(indent_str + ' '.join(current_line))
                             current_line = []
                             current_length = 0
-                        
+
                         # Quebra a palavra longa
                         word_parts = break_long_word(word, max_content_width)
                         wrapped.extend(indent_str + part for part in word_parts)
                         continue
-                    
+
                     # Se adicionar a palavra ultrapassa a largura
                     if current_length + len(word) + (1 if current_line else 0) > max_content_width:
                         wrapped.append(indent_str + ' '.join(current_line))
@@ -1098,18 +1145,18 @@ def wrap_line(line, width):
                     else:
                         current_line.append(word)
                         current_length += len(word) + (1 if current_line else 0)
-                
+
                 if current_line:
                     wrapped.append(indent_str + ' '.join(current_line))
-                
+
                 result = wrapped
-    
+
     # Atualiza o cache
     if len(WRAP_CACHE) >= WRAP_CACHE_SIZE:
         # Remove o item mais antigo se o cache estiver cheio
         WRAP_CACHE.pop(next(iter(WRAP_CACHE)))
     WRAP_CACHE[cache_key] = result
-    
+
     return result
 
 def find_word_boundary(line, pos, forward=True):
@@ -1148,31 +1195,31 @@ def get_content_line_index(display_lines, display_index):
     """Converte o índice da linha de exibição para o índice da linha do conteúdo."""
     if display_index >= len(display_lines):
         return len(display_lines) - 1
-        
+
     # Cria um mapeamento entre linhas de exibição e linhas de conteúdo
     content_line_map = []
     current_content_line = 0
-    
+
     for line in display_lines:
         content_line_map.append(current_content_line)
         # Se esta não é uma linha quebrada (não tem indentação extra)
         if not line.startswith(' ' * (len(line) - len(line.lstrip()))):
             current_content_line += 1
-    
+
     return content_line_map[display_index]
 
 def highlight_matches(stdscr, content, search_state, start_y, start_x, box_h, box_w):
     """Destaca todas as ocorrências do padrão de busca."""
     if not search_state.search_active or not search_state.pattern:
         return
-    
+
     text_start_x = start_x + 2
     text_width = box_w - 4
-    
+
     for match_y, match_x in search_state.matches:
         # Calcula a posição de exibição
         display_y = get_display_line_index(content, match_y, text_width) - search_state.scroll_y
-        
+
         if 0 <= display_y < box_h - 2:
             # Desenha o destaque
             safe_addstr(stdscr, start_y + 1 + display_y, text_start_x + match_x,
@@ -1183,15 +1230,15 @@ def show_search_bar(stdscr, search_state):
     h, w = stdscr.getmaxyx()
     y = h - 3
     x = 2
-    
+
     # Limpa a linha
     stdscr.addstr(y, x, " " * (w - 4))
-    
+
     # Desenha a barra de busca com opções
     search_text = f"Buscar: {search_state.pattern}"
     if search_state.matches:
         search_text += f" ({search_state.current_match + 1}/{len(search_state.matches)})"
-    
+
     # Adiciona indicadores de opções
     options = []
     if search_state.case_sensitive:
@@ -1200,12 +1247,12 @@ def show_search_bar(stdscr, search_state):
         options.append("W")
     if search_state.regex:
         options.append("R")
-    
+
     if options:
         search_text += f" [{','.join(options)}]"
-    
+
     stdscr.addstr(y, x, search_text, curses.color_pair(3))
-    
+
     # Mostra as opções de teclas
     help_text = "[Enter: Próximo] [Shift+Enter: Anterior] [ESC: Cancelar] [Tab: Opções]"
     stdscr.addstr(y, w - len(help_text) - 2, help_text, curses.color_pair(4))
@@ -1217,9 +1264,9 @@ def show_search_options(stdscr, search_state):
     options_w = 30
     y = h - options_h - 3
     x = 2
-    
+
     draw_box(stdscr, y, x, options_h, options_w, "Opções de Busca")
-    
+
     # Lista de opções
     options = [
         ("C - Case Sensitive", search_state.case_sensitive),
@@ -1228,13 +1275,13 @@ def show_search_options(stdscr, search_state):
         ("I - Busca Incremental", search_state.incremental),
         ("S - Buscar em Seleção", search_state.search_in_selection)
     ]
-    
+
     for i, (text, active) in enumerate(options):
         status = "✓" if active else " "
         safe_addstr(stdscr, y + 1 + i, x + 2, f"{text}: [{status}]", curses.color_pair(3))
-    
+
     stdscr.refresh()
-    
+
     while True:
         key = stdscr.getch()
         if key == 27:  # ESC
@@ -1301,7 +1348,7 @@ def main(stdscr, initial_filepath=None):
     curses.init_pair(3, curses.COLOR_CYAN, -1)
     curses.init_pair(4, curses.COLOR_YELLOW, -1)
     curses.init_pair(5, curses.COLOR_WHITE, curses.COLOR_BLUE)
-    
+
     # Cores para Markdown
     curses.init_pair(COLOR_MD_HEADER, curses.COLOR_BLUE, -1)
     curses.init_pair(COLOR_MD_BOLD, curses.COLOR_YELLOW, -1)
@@ -1324,7 +1371,7 @@ def main(stdscr, initial_filepath=None):
         filepath = initial_filepath
     else:
         filepath = os.path.join(os.getcwd(), "untitled.txt")
-    
+
     content = load_file(filepath)
     if not content:  # Garante que sempre haja pelo menos uma linha vazia
         content = [""]
@@ -1393,31 +1440,31 @@ def main(stdscr, initial_filepath=None):
             if line_idx < len(display_lines):
                 line = display_lines[line_idx]
                 x_pos = text_start_x
-                
+
                 # Obtém o índice da linha de conteúdo correspondente
                 content_line = get_content_line_index(display_lines, line_idx)
-                
+
                 if state.selection_start and state.selection_end:
                     start_sel = state.selection_start if state.selection_start[0] < state.selection_end[0] else state.selection_end
                     end_sel = state.selection_end if state.selection_start[0] < state.selection_end[0] else state.selection_start
-                    
+
                     if start_sel[0] <= content_line <= end_sel[0]:
                         # Calcula as posições relativas na linha
                         start_x_sel = start_sel[1] if content_line == start_sel[0] else 0
                         end_x_sel = end_sel[1] if content_line == end_sel[0] else len(line)
-                        
+
                         # Desenha a parte antes da seleção com realce
                         for color, text in highlight_syntax(line[:start_x_sel], state.language):
                             if len(text) > 0:
                                 safe_addstr(stdscr, start_y + 1 + i, x_pos, text, curses.color_pair(color))
                                 x_pos += len(text)
-                        
+
                         # Desenha a seleção
                         sel_text = line[start_x_sel:end_x_sel]
                         if sel_text:
                             safe_addstr(stdscr, start_y + 1 + i, x_pos, sel_text, curses.color_pair(5))
                             x_pos += len(sel_text)
-                        
+
                         # Desenha a parte depois da seleção com realce
                         for color, text in highlight_syntax(line[end_x_sel:], state.language):
                             if len(text) > 0:
@@ -1448,17 +1495,22 @@ def main(stdscr, initial_filepath=None):
 
         # Garante que a posição do cursor é válida antes de movê-lo
         state.ensure_valid_cursor_position()
-        
+
         # Calcula a posição correta do cursor considerando o scroll
         cursor_display_y = display_cursor_y - state.scroll_y
-        if 0 <= cursor_display_y < box_h - 2:
-            stdscr.move(start_y + 1 + cursor_display_y, text_start_x + state.cursor_x)
-        
+        cursor_display_x = text_start_x + state.cursor_x
+
+        # Obtém as dimensões da janela
+        max_y, max_x = stdscr.getmaxyx()
+
+        if 0 <= cursor_display_y < box_h - 2 and 0 <= cursor_display_x < max_x:
+            stdscr.move(start_y + 1 + cursor_display_y, cursor_display_x)
+
         stdscr.refresh()
 
         key = stdscr.getch()
         state.message = ""
-        
+
         # Verifica se Shift está pressionado
         if key == curses.KEY_SLEFT or key == curses.KEY_SRIGHT:
             state.shift_pressed = True
@@ -1523,7 +1575,7 @@ def main(stdscr, initial_filepath=None):
                 command_handler.execute_command(InsertCommand(state.content.pop(state.cursor_y)), state)
         elif key == 21:  # Ctrl+U
             if state.cutbuf:
-                command_handler.execute_command(InsertCommand(state.cutbuf), state)
+                command_handler.execute_command(InsertTextCommand(state.cutbuf), state)
         elif key == 31:  # Ctrl+_
             line = prompt_input(stdscr, "Ir para linha: ")
             if line.isdigit():
